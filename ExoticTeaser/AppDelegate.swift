@@ -33,6 +33,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		// make it transparent
 		window!.opaque = false
 		window!.backgroundColor = NSColor.clearColor()
+		
+		// TODO: commandline parameter to specify a root directory, a movie filename.
+		/*
+		let args = NSProcessInfo.processInfo().arguments
+		*/
 	}
 
 	func applicationWillTerminate(aNotification: NSNotification) {

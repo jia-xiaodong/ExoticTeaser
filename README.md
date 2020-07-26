@@ -9,3 +9,5 @@ Features:
 > no storyboard
 > customed NSApplicationMain
 > transparent background
+
+Thank you very much, https://erowall.com. You're one of my best friends.

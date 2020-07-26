@@ -13,7 +13,7 @@ import AVFoundation
 class ViewController: NSViewController {
 
 	// [jxd] important!
-	// must define it to avoid app to read XIB file
+	// must define it to avoid app launching from XIB file
 	override func loadView()
 	{
 		/*
@@ -34,8 +34,6 @@ class ViewController: NSViewController {
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
-		srandom(UInt32(time(nil)))
 		
 		// attach an AVPlayerLayer to root view
 		let playerItem = chooseRandomClip()
@@ -82,15 +80,6 @@ class ViewController: NSViewController {
 	}
 	
 	let teasers = TreaserGenerator()
-
-	//! choose a random movie clip
-	var randomClip: NSURL? {
-		do {
-			return try teasers.next()
-		} catch {
-			return nil
-		}
-	}
 
 	// MARK: - Player Item Configuration
 	
@@ -152,7 +141,11 @@ class ViewController: NSViewController {
 	}
 	
 	func chooseRandomClip() -> AVPlayerItem {
-		let playItem = createTransparentItem(randomClip!)
+		let video = teasers.next()
+		if video == nil {
+			NSApp.terminate(nil)
+		}
+		let playItem = createTransparentItem(video!)
 		playItem.addObserver(self, forKeyPath: "status", options: .New, context: nil)
 		playerLayer?.player?.replaceCurrentItemWithPlayerItem(playItem)
 		return playItem
