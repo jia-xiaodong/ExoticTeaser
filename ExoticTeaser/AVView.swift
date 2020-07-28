@@ -13,7 +13,7 @@ import AVFoundation
 public class AVView: NSView {
 	private var frameOrigin: CGPoint?
 	
-	// FIXME: in order to accept Key events, the below method should be defined in theory. But in practice it doesn't have to.
+	// FIXME: in order to accept KeyDown events, the below method should be defined in theory. But in practice it doesn't have to.
 	/*
 	override public var acceptsFirstResponder: Bool {
 			return true

@@ -101,6 +101,40 @@ public class TreaserGenerator
 		return nil // all directories are done iterating.
 	}
 	
+	//! jump to previous
+	public func previous() -> NSURL? {
+		if videoCounter > 1 {
+			let video = videoList![videoCounter-2]
+			videoCounter -= 1
+			return video
+		}
+		while directoryCounter > 1 {
+			videoList = videosInDirectory(directoryList[directoryCounter-2])
+			directoryCounter -= 1
+			
+			if videoList != nil {
+				videoCounter = videoList!.count
+				return videoList![videoCounter-1]
+			}
+		}
+		return nil // all directories are done iterating.
+	}
+	
+	//! jump to previous group
+	//! if playing the 1st clip, do not jump backwards any more.
+	public func previousGroup() -> NSURL? {
+		while directoryCounter > 1 {
+			videoList = videosInDirectory(directoryList[directoryCounter-2])
+			directoryCounter -= 1
+			
+			if videoList != nil {
+				videoCounter = 1
+				return videoList![0]
+			}
+		}
+		return nil // all directories are done iterating.
+	}
+	
 	private func videosInDirectory(url: NSURL) -> [NSURL]? {
 		let fileManager = NSFileManager.defaultManager()
 		guard var files = try? fileManager.contentsOfDirectoryAtURL(url,

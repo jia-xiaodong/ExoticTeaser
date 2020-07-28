@@ -10,9 +10,16 @@ import Cocoa
 import AVKit
 import AVFoundation
 
-enum ClipNavigation: Int {
-	case Next = 0
+enum SeekOption: Int {
+	case NextClip = 0
 	case NextGroup = 1
+	case PreviousClip = 2
+	case PreviousGroup = 3
+	
+	//! value type -> reference type
+	static func toNumber(i:SeekOption) -> NSNumber {
+		return NSNumber(integer: i.rawValue)
+	}
 }
 
 class ViewController: NSViewController {
@@ -27,8 +34,10 @@ class ViewController: NSViewController {
 		*/
 		self.view = AVView(frame: NSMakeRect(0, 0, 50, 50))
 
-		// a local monitor must be added explicitly to make a NSView to accept Key event. Because my NSWindow
-		// doesn't have Title Bar.
+		/*
+		Because my NSWindow doesn't have Title Bar. So NSView can't receive KeyDown event.
+		Therefore a local monitor must be added explicitly.
+		*/
 		NSEvent .addLocalMonitorForEventsMatchingMask(.KeyDownMask, handler: { event -> NSEvent? in
 			self.keyDown(event)
 			return event
@@ -41,9 +50,9 @@ class ViewController: NSViewController {
 		super.viewDidLoad()
 		
 		// attach an AVPlayerLayer to root view
-		let playerItem = chooseMovieClip(ClipNavigation.Next)
-		let player = AVPlayer(playerItem: playerItem)
-		playerItem.addObserver(self, forKeyPath: "status", options: .New, context: nil)
+		let playerItem = chooseMovieClip(SeekOption.NextClip)
+		let player = AVPlayer(playerItem: playerItem!)
+		playerItem?.addObserver(self, forKeyPath: "status", options: .New, context: nil)
 		NSNotificationCenter.defaultCenter()
 			.addObserver(self,
 			             selector: #selector(self.playNextClip(_:)),
@@ -146,16 +155,29 @@ class ViewController: NSViewController {
 		}
 	}
 	
-	func chooseMovieClip(operation: ClipNavigation) -> AVPlayerItem {
+	func chooseMovieClip(operation: SeekOption) -> AVPlayerItem? {
 		let video: NSURL?
 		switch operation {
-		case .Next:
+		case .NextClip: // normal play: exit when all videos are done playing.
 			video = teasers.next()
-		case .NextGroup:
+			if video == nil {
+				NSApp.terminate(nil)
+			}
+		case .NextGroup: // if it's the last group, ignore it.
 			video = teasers.nextGroup()
-		}
-		if video == nil {
-			NSApp.terminate(nil)
+			if video == nil {
+				return nil
+			}
+		case .PreviousClip: // if it's the 1st clip, ignore it.
+			video = teasers.previous()
+			if video == nil {
+				return nil
+			}
+		case .PreviousGroup: // if it's the 1st group, ignore it.
+			video = teasers.previousGroup()
+			if video == nil {
+				return nil
+			}
 		}
 		let playItem = createTransparentItem(video!)
 		playItem.addObserver(self, forKeyPath: "status", options: .New, context: nil)
@@ -190,18 +212,26 @@ class ViewController: NSViewController {
 		case 53:  // esc
 			NSApp.terminate(nil)
 		case 123: // left arrow
-			break
+			let userInfo = ["to": SeekOption.toNumber(.PreviousClip)]
+			NSNotificationCenter.defaultCenter()
+				.postNotificationName(AVPlayerItemDidPlayToEndTimeNotification,
+				                      object: self,
+				                      userInfo:userInfo)
 		case 124: // right arrow: jump to next clip.
 			NSNotificationCenter.defaultCenter()
 				.postNotificationName(AVPlayerItemDidPlayToEndTimeNotification, object: self)
 		case 125: // bottom arrow
-			let userInfo = ["to": NSNumber(integer:ClipNavigation.NextGroup.rawValue)]
+			let userInfo = ["to": SeekOption.toNumber(.NextGroup)]
 			NSNotificationCenter.defaultCenter()
 				.postNotificationName(AVPlayerItemDidPlayToEndTimeNotification,
 				                      object: self,
 				                      userInfo:userInfo)
 		case 126: // up arrow
-			break
+			let userInfo = ["to": SeekOption.toNumber(.PreviousGroup)]
+			NSNotificationCenter.defaultCenter()
+				.postNotificationName(AVPlayerItemDidPlayToEndTimeNotification,
+				                      object: self,
+				                      userInfo:userInfo)
 		default:
 			debugPrint("[user key] code:", theEvent.keyCode)
 		}
@@ -209,9 +239,9 @@ class ViewController: NSViewController {
 	
 	func playNextClip(notification: NSNotification) {
 		let info = notification.userInfo
-		var operation = ClipNavigation.Next
+		var operation = SeekOption.NextClip
 		if let param = info?["to"] as? NSNumber {
-			operation = ClipNavigation(rawValue: param.integerValue)!
+			operation = SeekOption(rawValue: param.integerValue)!
 		}
 		chooseMovieClip(operation)
 	}
