@@ -67,6 +67,7 @@ public class TreaserGenerator
 		}
 	}
 	
+	//! Navigate to next clip in current group. If no more, jump to next group.
 	public func next() -> NSURL? {
 		if videoCounter < videoList?.count {
 			let video = videoList![videoCounter]
@@ -74,6 +75,20 @@ public class TreaserGenerator
 			return video
 		}
 		// begin to iterate next directory
+		while directoryCounter < directoryList.count {
+			videoList = videosInDirectory(directoryList[directoryCounter])
+			directoryCounter += 1
+			
+			if videoList != nil {
+				videoCounter = 1
+				return videoList![0]
+			}
+		}
+		return nil // all directories are done iterating.
+	}
+	
+	//! jump to next group
+	public func nextGroup() -> NSURL? {
 		while directoryCounter < directoryList.count {
 			videoList = videosInDirectory(directoryList[directoryCounter])
 			directoryCounter += 1

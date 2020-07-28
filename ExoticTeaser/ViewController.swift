@@ -10,6 +10,11 @@ import Cocoa
 import AVKit
 import AVFoundation
 
+enum ClipNavigation: Int {
+	case Next = 0
+	case NextGroup = 1
+}
+
 class ViewController: NSViewController {
 
 	// [jxd] important!
@@ -25,7 +30,7 @@ class ViewController: NSViewController {
 		// a local monitor must be added explicitly to make a NSView to accept Key event. Because my NSWindow
 		// doesn't have Title Bar.
 		NSEvent .addLocalMonitorForEventsMatchingMask(.KeyDownMask, handler: { event -> NSEvent? in
-			self.view.keyDown(event)
+			self.keyDown(event)
 			return event
 		})
 	}
@@ -36,13 +41,14 @@ class ViewController: NSViewController {
 		super.viewDidLoad()
 		
 		// attach an AVPlayerLayer to root view
-		let playerItem = chooseRandomClip()
+		let playerItem = chooseMovieClip(ClipNavigation.Next)
 		let player = AVPlayer(playerItem: playerItem)
 		playerItem.addObserver(self, forKeyPath: "status", options: .New, context: nil)
-		NSNotificationCenter.defaultCenter().addObserver(self,
-		                                                 selector: #selector(chooseRandomClip),
-		                                                 name: AVPlayerItemDidPlayToEndTimeNotification,
-		                                                 object: nil)
+		NSNotificationCenter.defaultCenter()
+			.addObserver(self,
+			             selector: #selector(self.playNextClip(_:)),
+			             name: AVPlayerItemDidPlayToEndTimeNotification,
+			             object: nil) // "self" gets this notification
 		let playerLayer = AVPlayerLayer(player: player)
 		
 		// the layer's initial anchor is bottom left corner.
@@ -140,8 +146,14 @@ class ViewController: NSViewController {
 		}
 	}
 	
-	func chooseRandomClip() -> AVPlayerItem {
-		let video = teasers.next()
+	func chooseMovieClip(operation: ClipNavigation) -> AVPlayerItem {
+		let video: NSURL?
+		switch operation {
+		case .Next:
+			video = teasers.next()
+		case .NextGroup:
+			video = teasers.nextGroup()
+		}
 		if video == nil {
 			NSApp.terminate(nil)
 		}
@@ -162,5 +174,45 @@ class ViewController: NSViewController {
 		playerLayer?.bounds = view.bounds
 		playerLayer?.position = viewCenter
 		playerLayer?.anchorPoint = anchorCenter
+	}
+	
+	override func keyDown(theEvent: NSEvent) {
+		switch theEvent.keyCode {
+		case 49:  // space-bar
+			guard let player = playerLayer?.player else {
+				return
+			}
+			if (player.rate == 1.0) {
+				player.pause()
+			} else {
+				player.play()
+			}
+		case 53:  // esc
+			NSApp.terminate(nil)
+		case 123: // left arrow
+			break
+		case 124: // right arrow: jump to next clip.
+			NSNotificationCenter.defaultCenter()
+				.postNotificationName(AVPlayerItemDidPlayToEndTimeNotification, object: self)
+		case 125: // bottom arrow
+			let userInfo = ["to": NSNumber(integer:ClipNavigation.NextGroup.rawValue)]
+			NSNotificationCenter.defaultCenter()
+				.postNotificationName(AVPlayerItemDidPlayToEndTimeNotification,
+				                      object: self,
+				                      userInfo:userInfo)
+		case 126: // up arrow
+			break
+		default:
+			debugPrint("[user key] code:", theEvent.keyCode)
+		}
+	}
+	
+	func playNextClip(notification: NSNotification) {
+		let info = notification.userInfo
+		var operation = ClipNavigation.Next
+		if let param = info?["to"] as? NSNumber {
+			operation = ClipNavigation(rawValue: param.integerValue)!
+		}
+		chooseMovieClip(operation)
 	}
 }

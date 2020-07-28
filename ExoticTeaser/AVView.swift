@@ -33,26 +33,4 @@ public class AVView: NSView {
 		//
 		super.mouseDragged(theEvent)
 	}
-	
-	override public func keyDown(theEvent: NSEvent) {
-		switch theEvent.keyCode {
-		case 49:  // space-bar
-			let avLayers = self.layer!.sublayers!.filter({ $0 is AVPlayerLayer })
-			guard avLayers.count > 0 else {
-				return
-			}
-			guard let player = (avLayers[0] as? AVPlayerLayer)?.player else {
-				return
-			}
-			if (player.rate == 1.0) {
-				player.pause()
-			} else {
-				player.play()
-			}
-		case 53:  // esc
-			NSApp.terminate(nil)
-		default:
-			break
-		}
-	}
 }
