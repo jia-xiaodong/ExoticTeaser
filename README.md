@@ -1,5 +1,8 @@
 # ExoticTeaser
-Used as a relax leisure when tired from work. A sprite will pop up and dance on Desktop
+Used as a relaxing, leisure approach when tired from work. A sprite will pop up and dance on Desktop
+The sprite is actually a mp4 movie clip that can be played by Apple video framework.
+This movie has an alpha channel which will be combined (composition filter) with normal picture.
+In short, the whole working technology is like "green-screen" in movie industry.
 
 Controls:
 > space-bar to pause/play video.
@@ -13,5 +16,3 @@ Features:
 > no storyboard
 > customed NSApplicationMain
 > transparent background
-
-Thank you very much, https://erowall.com. You're one of my best friends.
