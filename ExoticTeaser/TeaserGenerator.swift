@@ -152,6 +152,8 @@ public class TreaserGenerator
 			guard let file0 = $0.lastPathComponent, let file1 = $1.lastPathComponent else {
 				return $0.absoluteString < $1.absoluteString
 			}
+			return file0.localizedStandardCompare(file1) == NSComparisonResult.OrderedAscending
+			/*
 			guard let s0 = file0.rangeOfString("_"), let e0 = file0.rangeOfString(".") else {
 				return $0.absoluteString < $1.absoluteString
 			}
@@ -161,6 +163,7 @@ public class TreaserGenerator
 			let d0 = file0[s0.startIndex.advancedBy(1)..<e0.startIndex]
 			let d1 = file1[s1.startIndex.advancedBy(1)..<e1.startIndex]
 			return Int(d0) < Int(d1)
+			*/
 		}
 		return files
 	}
